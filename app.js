@@ -1,9 +1,5 @@
 require('dotenv').config();
 
-try {
-if (process.env.START === "true") {
-  process.env.START = "false"
-
 const migrate = require('./migrate');
 const relations = require('./relations');
 const files = require('./files');
@@ -31,26 +27,24 @@ relations.done.subscribe(() => {
 
   axiosclient.request(axiosclient.send,`Finished Data Migration in ${minutes} min \n :smile: Here are some stats: `);
   axiosclient.request(axiosclient.stats);
-
-  files.start();
-
-  let uploads = 0;
-
-  interval = setInterval(() => {
-    
-    axiosclient.request(axiosclient.send, `
-    Uploaded ${backstream.stats.filesUploaded - uploads} Files`);
-
-    axiosclient.start();
-
-    uploads = backstream.stats.filesUploaded;
-  }, (1000 * 60 * 10));
-
-  axiosclient.request(axiosclient.send,"Now I am transfering files to Minio");
   axiosclient.start()
-});
+  //files.start();
 
-files.start();
+  // let uploads = 0;
+
+  // interval = setInterval(() => {
+    
+  //   axiosclient.request(axiosclient.send, `
+  //   Uploaded ${backstream.stats.filesUploaded - uploads} Files`);
+
+  //   axiosclient.start();
+
+  //   uploads = backstream.stats.filesUploaded;
+  // }, (1000 * 60 * 10));
+
+  // axiosclient.request(axiosclient.send,"Now I am transfering files to Minio");
+  // axiosclient.start()
+});
 
 files.done.subscribe(() => {
 
@@ -67,9 +61,4 @@ files.done.subscribe(() => {
   axiosclient.request(axiosclient.stats());
   axiosclient.request(axiosclient.send,`Have a nice day \n Bye!`)
 });
-
-}
-} catch (error) {
-  process.env.START = "false"
-}
 
