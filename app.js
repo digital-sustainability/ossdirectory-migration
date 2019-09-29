@@ -8,7 +8,7 @@ require('dotenv').config();
 
 let interval;
 
-//migrate.start();
+migrate.start();
 axiosclient.request(axiosclient.send,"I have started the Data Migration! :ghost: \n");
 axiosclient.start();
 migrate.done.subscribe(() => {
