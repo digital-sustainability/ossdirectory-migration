@@ -25,6 +25,9 @@ relations.done.subscribe(() => {
   axiosclient.request(axiosclient.send,`Finished Data Migration in ${minutes} min \n :smile: Here are some stats: `);
   axiosclient.request(axiosclient.stats);
   axiosclient.start()
+
+
+  files.start();
   //files.start();
 
   // let uploads = 0;
@@ -42,7 +45,8 @@ relations.done.subscribe(() => {
   // axiosclient.request(axiosclient.send,"Now I am transfering files to Minio");
   // axiosclient.start()
 });
-files.start();
+
+
 files.done.subscribe(() => {
 
   const start = files.starttime;
