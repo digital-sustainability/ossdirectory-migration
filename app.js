@@ -6,6 +6,10 @@ const backstream = require('./backstream');
 
 require('dotenv').config();
 
+if (process.env.START === "true") {
+
+
+
 let interval;
 
 migrate.start();
@@ -58,4 +62,6 @@ files.done.subscribe(() => {
   axiosclient.request(axiosclient.stats());
   axiosclient.request(axiosclient.send,`Have a nice day \n Bye!`)
 });
+
+}
 
