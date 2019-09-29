@@ -45,7 +45,7 @@ const axiosclient = module.exports = {
         "type": "section",
         "accessory": {
           "type": "image",
-          "image_url": "https://minio.digisus.ch/oss-directory/Screenshot%202019-09-28%2021.51.11.png",
+          "image_url": "https://minio.digisus.ch/neo4j/oss.png",
           "alt_text": "oss directory image"
         },
         "fields": [

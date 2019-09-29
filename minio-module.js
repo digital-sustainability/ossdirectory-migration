@@ -1,5 +1,7 @@
 const minio = require('minio');
 
+require('dotenv').config();
+
 const minioclient = module.exports = {
 
   client: new minio.Client({
@@ -10,3 +12,8 @@ const minioclient = module.exports = {
     secretKey: process.env.MINIO_SECRET_KEY,
   }),
 } 
+
+minioclient.client.listBuckets(function (err, buckets) {
+  console.log(err);
+  console.log(buckets);
+})

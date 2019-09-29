@@ -1,4 +1,8 @@
+require('dotenv').config();
+
+try {
 if (process.env.START === "true") {
+  process.env.START = "false"
 
 const migrate = require('./migrate');
 const relations = require('./relations');
@@ -6,12 +10,12 @@ const files = require('./files');
 const axiosclient = require('./axios-module');
 const backstream = require('./backstream');
 
-require('dotenv').config();
+
 
 
 let interval;
 
-migrate.start();
+//migrate.start();
 axiosclient.request(axiosclient.send,"I have started the Data Migration! :ghost: \n");
 axiosclient.start();
 migrate.done.subscribe(() => {
@@ -23,7 +27,7 @@ relations.done.subscribe(() => {
   const end = relations.endtime
 
   const time = end - start;
-  const minutes = time / (1000 * 60 * 10);
+  const minutes = time / (1000 * 60 * 30);
 
   axiosclient.request(axiosclient.send,`Finished Data Migration in ${minutes} min \n :smile: Here are some stats: `);
   axiosclient.request(axiosclient.stats);
@@ -46,6 +50,8 @@ relations.done.subscribe(() => {
   axiosclient.start()
 });
 
+files.start();
+
 files.done.subscribe(() => {
 
   clearInterval(interval);
@@ -62,5 +68,8 @@ files.done.subscribe(() => {
   axiosclient.request(axiosclient.send,`Have a nice day \n Bye!`)
 });
 
+}
+} catch (error) {
+  process.env.START = "false"
 }
 
