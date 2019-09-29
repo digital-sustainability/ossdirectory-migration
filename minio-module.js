@@ -10,6 +10,6 @@ const minioclient = module.exports = {
     useSSL: process.env.MINIO_USE_SSL === "true" ? true : false,
     accessKey: process.env.MINIO_ACCESS_KEY,
     secretKey: process.env.MINIO_SECRET_KEY,
-    region : "",
   }),
 }
+

@@ -6,9 +6,6 @@ const files = require('./files');
 const axiosclient = require('./axios-module');
 const backstream = require('./backstream');
 
-
-
-
 let interval;
 
 migrate.start();
@@ -45,10 +42,8 @@ relations.done.subscribe(() => {
   // axiosclient.request(axiosclient.send,"Now I am transfering files to Minio");
   // axiosclient.start()
 });
-
+files.start();
 files.done.subscribe(() => {
-
-  clearInterval(interval);
 
   const start = files.starttime;
   const end = files.endtime 
@@ -57,8 +52,7 @@ files.done.subscribe(() => {
   const hours = time / (1000 * 60 * 60);
 
   axiosclient.request(axiosclient.send,`File Transfer Completed within ${hours} hours :see_no_evil:`)
-  axiosclient.request(axiosclient.send,`Final Stats: `);
-  axiosclient.request(axiosclient.stats());
   axiosclient.request(axiosclient.send,`Have a nice day \n Bye!`)
+  axiosclient.start();
 });
 
