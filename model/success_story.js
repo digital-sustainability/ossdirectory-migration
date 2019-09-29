@@ -186,7 +186,7 @@ SET successstory.imageUrl = $imageUrl
 
 successstory.files = function () {
 
-  const session = neo4jsuccessstory.session;
+  const session = neo4jclient.session;
 
   const successstorys = new Subject()
   session.run(successstory.getSuccessStory, {}).then(result => successstorys.next(result));
