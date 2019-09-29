@@ -11,7 +11,7 @@ const backstream = require('./backstream');
 
 let interval;
 
-//migrate.start();
+migrate.start();
 //axiosclient.request(axiosclient.send,"I have started the Data Migration! :ghost: \n");
 //axiosclient.start();
 migrate.done.subscribe(() => {
@@ -23,7 +23,7 @@ relations.done.subscribe(() => {
   const end = relations.endtime
 
   const time = end - start;
-  const minutes = time / (1000 * 60 * 30);
+  const minutes = time / (1000 * 60);
 
   axiosclient.request(axiosclient.send,`Finished Data Migration in ${minutes} min \n :smile: Here are some stats: `);
   axiosclient.request(axiosclient.stats);
