@@ -12,8 +12,8 @@ const backstream = require('./backstream');
 let interval;
 
 //migrate.start();
-axiosclient.request(axiosclient.send,"I have started the Data Migration! :ghost: \n");
-axiosclient.start();
+//axiosclient.request(axiosclient.send,"I have started the Data Migration! :ghost: \n");
+//axiosclient.start();
 migrate.done.subscribe(() => {
   relations.start();
 });

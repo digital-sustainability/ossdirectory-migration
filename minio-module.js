@@ -12,9 +12,4 @@ const minioclient = module.exports = {
     secretKey: process.env.MINIO_SECRET_KEY,
     region : "",
   }),
-} 
-
-minioclient.client.listBuckets(function (err, buckets) {
-  console.log(err);
-  console.log(buckets);
-})
+}
