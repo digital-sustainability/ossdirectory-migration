@@ -1,3 +1,5 @@
+if (process.env.START === "true") {
+
 const migrate = require('./migrate');
 const relations = require('./relations');
 const files = require('./files');
@@ -5,9 +7,6 @@ const axiosclient = require('./axios-module');
 const backstream = require('./backstream');
 
 require('dotenv').config();
-
-if (process.env.START === "true") {
-
 
 
 let interval;
@@ -24,7 +23,7 @@ relations.done.subscribe(() => {
   const end = relations.endtime
 
   const time = end - start;
-  const minutes = time / (1000 * 60);
+  const minutes = time / (1000 * 60 * 10);
 
   axiosclient.request(axiosclient.send,`Finished Data Migration in ${minutes} min \n :smile: Here are some stats: `);
   axiosclient.request(axiosclient.stats);
