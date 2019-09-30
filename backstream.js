@@ -11,7 +11,7 @@ const backstream = module.exports = {
       const index = backstream.active.indexOf(observable);
       backstream.active.splice(index,1);
 
-      if (backstream.active.length <= 0) {
+      if (backstream.active.length <= 0) { //if there are no more requests we can end process
         backstream.done.next("done");
       }
       
@@ -36,13 +36,13 @@ const backstream = module.exports = {
     relationshipsCreated : 0,
     propertiesSet : 0,
     labelsAdded: 0,
-    uploaded : 0,
-    rows : 0,
     filesUploaded : 0,
     filesNotMatched : 0,
   },
   done : new Subject(),
   files : new Subject(),
+  logs : [],
+  log : (log) => backstream.logs.push(log),
 }
 
 

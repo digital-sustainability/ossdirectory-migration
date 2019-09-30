@@ -2,7 +2,7 @@ const mysqlclient = require('./mysql-module');
 const neo4jclient = require('./neo4j-module');
 const { Subject } = require('rxjs');
 const backstream = require('./backstream');
-const ftpclient = require('./ftp-module');
+const relations = require('./relations');
 
 const vendor = require('./model/vendor');
 const client = require('./model/client');
@@ -15,10 +15,10 @@ const setup = require('./model/setup');
 
 const migrate = module.exports = {
   start : () => {
-    migrate.starttime = new Date();
+    migrate.starttime = new Date(); //track time
     mysqlclient.connect();
-    neo4jclient.session = neo4jclient.driver.session();
-    migrate.subject.next(migrate.migrations.pop())
+    neo4jclient.setup(); //initialize driver
+    migrate.subject.next(setup); //send first migration object
   },
   subject : new Subject(),
   done: new Subject(),
@@ -29,31 +29,35 @@ const migrate = module.exports = {
     news,
     success_story,
     product,
-    product_category,
-  
-    setup, //needs to be called first
+    product_category
   ],
 }
 
 migrate.done.subscribe(() => {
-  migrate.endtime = new Date();
+  relations.start(); //if first migration is done we can start adding relationships
+})
+
+relations.done.subscribe(() => {
+  migrate.endtime = new Date(); //track end time
+  
+  //close connections
+  neo4jclient.end();
+  mysqlclient.end();
 })
 
 migrate.subject.subscribe(
   (migration) => 
   {
+    neo4jclient.connect(); //create individual session
     migration.migrate();
 
     const sub = backstream.done.subscribe(
       () => {
+        neo4jclient.close(); //close individual session
         sub.unsubscribe();
         if (migrate.migrations.length > 0) {
           migrate.subject.next(migrate.migrations.pop());
-        }
-        else {
-          neo4jclient.session.close();
-          neo4jclient.driver.close(); 
-          mysqlclient.end();
+        } else {
           migrate.done.next("done");
         }
       }

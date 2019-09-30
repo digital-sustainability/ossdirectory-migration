@@ -6,7 +6,7 @@ require('dotenv').config();
 const axiosclient = module.exports = {
   pipe : [],
   request : (action, param) => {
-    axiosclient.pipe.push({action, param});
+    //axiosclient.pipe.push({action, param});
   },
   start : () => {
     if (axiosclient.pipe.length <= 0) return
@@ -37,9 +37,9 @@ const axiosclient = module.exports = {
   },
   stats : () => {
     return axios.post("https://hooks.slack.com/services/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", {
-      channel : "iot",
+      channel : process.env.SLACK_CHANNEL,
       username : "Migration-Bot",
-      icon_emoji : ":squirrel:",
+      icon_emoji : ":robot_face:",
       "blocks" : [
       {
         "type": "section",

@@ -1,4 +1,3 @@
-const mysqlclient = require('./mysql-module');
 const neo4jclient = require('./neo4j-module');
 const { Subject } = require('rxjs');
 const backstream = require('./backstream');
@@ -13,43 +12,33 @@ const product_category = require('./model/product_category');
 
 const relations = module.exports = {
   migrations : [
-  
     news,
     product,
     success_story,
     vendor
-  
   ],
   start : () => {
-    relations.starttime = new Date();
-    mysqlclient.connect();
-    neo4jclient.session = neo4jclient.driver.session();
+    //asume connections are already made
     relations.subject.next(relations.migrations.pop());
   },
   subject : new Subject(),
   done : new Subject(),
 }
 
-relations.done.subscribe(() => {
-  relations.endtime = new Date();
-})
-
-
 relations.subject.subscribe(
   (migration) => 
   {
+    neo4jclient.connect();
     migration.relationships();
 
     const sub = backstream.done.subscribe(
       () => {
+        neo4jclient.close();
         sub.unsubscribe();
         if (relations.migrations.length > 0) {
           relations.subject.next(relations.migrations.pop());
         }
         else {
-          neo4jclient.session.close();
-          neo4jclient.driver.close(); 
-          mysqlclient.end();
           relations.done.next("done");
         }
       }
