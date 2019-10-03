@@ -1,15 +1,18 @@
 require('dotenv').config();
 const express = require('express');
+const files = require('./files');
 
 const app = express();
 
 app.listen(4200, () => {});
 app.get('/', (req, res) => { res.send("Migration Server OSS Directory")});
 app.get('/migrate/data', (req, res) => {
+  
   res.send("Started Data Migration");
 });
 
 app.get('/migrate/files', (req, res) => {
+  files.start();
   res.send("Started File Migration");
 })
 

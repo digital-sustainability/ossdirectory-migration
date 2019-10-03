@@ -28,12 +28,10 @@ const relations = module.exports = {
 relations.subject.subscribe(
   (migration) => 
   {
-    neo4jclient.connect();
     migration.relationships();
 
     const sub = backstream.done.subscribe(
       () => {
-        neo4jclient.close();
         sub.unsubscribe();
         if (relations.migrations.length > 0) {
           relations.subject.next(relations.migrations.pop());

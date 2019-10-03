@@ -29,7 +29,7 @@ client.address = `CREATE (node:Address {
 client.industry = `
 MERGE (node_trans:IndustryTranslation { title : $title })
 MERGE (node:Industry { title : $title })
-MERGE (node)-[:TRANSLATION]->(node_trans)
+MERGE (node)-[:INDUSTRY_TRANSLATION]->(node_trans)
 RETURN node;
 `
 
@@ -75,92 +75,92 @@ RETURN a,b,c,d,e,f,g,h
 `
 
 client.migrate = function () {
+
+  const requests = []; //track requests
+  const subject = new Subject(); //complete subject if all requests are done
   
   mysqlclient.query(client.query, (err, rows) => {
     if (err) console.log(err);
 
     console.log("Clients: ", rows.length);
-
-    const session = neo4jclient.session;
     
     rows.forEach(el => {
+
+      const object = {}; //create object
+      requests.push(object); //indexOf will search for object instances and not values!
       
-      const client_sub = new Subject();
-      const create_client = session.run(client.client, {
+      const create_client = neo4jclient.cypher(client.client, {
         uid: el.uid,
         url: el.url,
         deleted: el.deleted,
         imageUrl: el.logo
-      }).then(result => client_sub.next({result, type : "neo4j"}), rejected => console.log(rejected))
-      .catch((reason) => console.log(reason));
-      backstream.register(client_sub);
+      });
 
-      const address_sub = new Subject();
-      const create_address = session.run(client.address, {
+      const create_address = neo4jclient.cypher(client.address, {
         address: el.address,
         address2: el.address2,
         zip: el.zip,
         city: el.city,
         country: el.country
-      }).then(result => address_sub.next({result, type : "neo4j" }), rejected => console.log(rejected))
-      .catch((reason) => console.log(reason));
-      backstream.register(address_sub);
+      });
 
-      const industry_sub = new Subject();
-      const create_industry = session.run(client.industry, {
+      const create_industry = neo4jclient.cypher(client.industry, {
         title : el.business
-      }).then(result => industry_sub.next({result, type : "neo4j" }), rejected => console.log(rejected))
-      .catch((reason) => console.log(reason));
-      backstream.register(industry_sub);
+      });
 
-      const de_sub = new Subject();
-      const create_de = session.run(client.de, {
+      const create_de = neo4jclient.cypher(client.de, {
         title: el.title,
         description: el.description,
-      }).then(result => de_sub.next({result, type : "neo4j" }), rejected => console.log(rejected))
-      .catch((reason) => console.log(reason));
-      backstream.register(de_sub);
+      });
 
-      const fr_sub = new Subject();
-      const create_fr = session.run(client.de, {
+      const create_fr = neo4jclient.cypher(client.de, {
         title: el.title_fr,
         description: el.description_fr,
-      }).then(result => fr_sub.next({result, type : "neo4j" }), rejected => console.log(rejected))
-      .catch((reason) => console.log(reason));
-      backstream.register(fr_sub);
+      });
 
-      const en_sub = new Subject();
-      const create_en = session.run(client.de, {
+      const create_en = neo4jclient.cypher(client.de, {
         title: el.title_en,
         description: el.description_en,
-      }).then(result => en_sub.next({result, type : "neo4j"}), rejected => console.log(rejected))
-      .catch((reason) => console.log(reason));
-      backstream.register(en_sub);
+      });
 
-      combineLatest(client_sub, address_sub, industry_sub, de_sub, fr_sub, en_sub).subscribe(
+      const after = combineLatest(
+        create_client,
+        create_address,
+        create_industry,
+        create_de,
+        create_fr,
+        create_en);
+
+      after.subscribe(
         ([ven, address, industry, de, fr, en]) => {
-          const ven_id = ven.result.records[0].get(0).identity;
-          const address_id = address.result.records[0].get(0).identity;
-          const de_id = de.result.records[0].get(0).identity;
-          const fr_id = fr.result.records[0].get(0).identity;
-          const en_id = en.result.records[0].get(0).identity;
-          const industry_id = industry.result.records[0].get(0).identity;
+          const ven_id = ven.get(0).identity;
+          const address_id = address.get(0).identity;
+          const de_id = de.get(0).identity;
+          const fr_id = fr.get(0).identity;
+          const en_id = en.get(0).identity;
+          const industry_id = industry.get(0).identity;
 
-          const connect_sub = new Subject()
-          const connect = session.run(client.connect, {
+          neo4jclient.cypher(client.connect, {
             client_id: ven_id,
             address_id,
             de_id,
             fr_id,
             en_id,
             industry_id
-          }).then(result => {connect_sub.next({result, type : "neo4j"})}, rejected => console.log(rejected))
-          .catch((reason) => console.log(reason));
-          backstream.register(connect_sub);
+          });
+
+          //for each row this is the last result
+          const index = requests.indexOf(object);
+          requests.splice(index, 1);
+          if (requests.length <= 0) { //if all are done send complete
+            subject.next("done");
+            subject.complete();
+          }
         }
       );
     });
   });
+  return subject;
 }
 
 client.getClient = `
@@ -174,36 +174,52 @@ SET client.imageUrl = $imageUrl
 
 client.files = function () {
 
-  const session = neo4jclient.session;
+  const done = new Subject();
 
-  const clients = new Subject()
-  session.run(client.getClient, {}).then(result => clients.next({result, type : ""}))
-  .catch((reason) => console.log(reason));
-  clients.subscribe(
-    (result) => {
-      ftpclient.ready.subscribe((ready) => {
-        if (ready) {
-          result.records.forEach((record) => {
+  ftpclient.ready.subscribe((ready) => {
+    if (ready) {
 
-            const sequence = record.get('client').properties.sequence 
-            const imageUrl = record.get('client').properties.imageUrl
-            const uid = record.get('client').properties.uid
-            const sub = new Subject();
-            ftpclient.request.next({ filename : imageUrl, type : "client", uid : uid, sequence : sequence, subject : sub});
+      const requests = [];
 
-            const up = new Subject();
-            sub.subscribe((promise) => {
-              promise.then(result => {
-                session.run(client.updateImage, {
-                  sequence : sequence,
-                  imageUrl : result
-                }).then(res => up.next({res, type : "update" }));
-              });
-            });
-            backstream.register(up);
-          })
-        }
-      })
+      const clients = neo4jclient.cypher(client.getClient, {});
+
+      clients.subscribe(
+        
+          (record) => {
+            const client = record.get(0);
+            const sequence = client.properties.sequence;
+            const imageUrl = client.properties.imageUrl;
+    
+            const request = {
+              filename : imageUrl,
+              type : "client",
+              sequence : sequence,
+            };
+
+            requests.push(request);
+            const results = ftpclient.request(request);
+            results.subscribe(({ filename, result_sequence }) => {
+              
+              if (result_sequence === sequence) {
+                neo4jclient.cypher(client.updateImage, {
+                  sequence,
+                  imageUrl : filename
+                })
+
+
+                const index = requests.indexOf(request);
+                requests.splice(index, 1);
+                results.unsubscribe();
+                if (requests.length <= 0) {
+                  done.next("done");
+                  done.complete();
+                }
+              }
+            })
+          }
+        )
     }
-  )
+  });
+
+  return done;
 }

@@ -2,6 +2,7 @@ const neo4jclient = require('./neo4j-module');
 const { Subject } = require('rxjs');
 const backstream = require('./backstream');
 const ftpclient = require('./ftp-module');
+const logger = require('./log-module');
 
 const vendor = require('./model/vendor');
 const client = require('./model/client');
@@ -13,12 +14,12 @@ const product_category = require('./model/product_category');
 
 const files = module.exports = {
   migrations : [
+    product,
     vendor,
     client,
     // job,
     // news,
     success_story,
-    product,
     // product_category,
   ],
   subject : new Subject(),
@@ -27,6 +28,8 @@ const files = module.exports = {
     neo4jclient.setup();
     ftpclient.connect();
     files.subject.next(files.migrations.pop());
+    
+    files.done.subscribe(() => console.log("done"));
   }
 }
 
@@ -38,21 +41,17 @@ files.done.subscribe(() => {
 files.subject.subscribe(
   (migration) => 
   {
-    neo4jclient.connect();
-    migration.files();
-
-    const sub = backstream.done.subscribe(
+    const done = migration.files();
+    done.subscribe(
       () => {
-        neo4jclient.close();
-        sub.unsubscribe();
-        
         if (files.migrations.length > 0) {
           files.subject.next(files.migrations.pop());
         }
         else {
           files.done.next("done");
+          logger.log("file migration completed");
         }
       }
-    );
+    )
   }
 );

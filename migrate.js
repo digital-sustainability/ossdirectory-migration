@@ -22,6 +22,7 @@ const migrate = module.exports = {
   },
   subject : new Subject(),
   done: new Subject(),
+
   migrations : [
     vendor,
     client,
@@ -48,22 +49,13 @@ relations.done.subscribe(() => {
 migrate.subject.subscribe(
   (migration) => 
   {
-    neo4jclient.connect(); //create individual session
-    migration.migrate();
-
-    const sub = backstream.done.subscribe(
-      () => {
-        neo4jclient.close(); //close individual session
-        sub.unsubscribe();
-        if (migrate.migrations.length > 0) {
-          migrate.subject.next(migrate.migrations.pop());
-        } else {
-          migrate.done.next("done");
-        }
+    const sub = migration.migrate();
+    sub.subscribe(() => {
+      if (migrate.migrations.length > 0) {
+        migrate.subject.next(migrate.migrations.pop());
+      } else {
+        migrate.done.next("done");
       }
-    );
+    });
   }
 );
-
-
-

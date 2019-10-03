@@ -186,35 +186,51 @@ SET successstory.imageUrl = $imageUrl
 
 successstory.files = function () {
 
-  const session = neo4jclient.session;
+  const done = new Subject();
 
-  const successstorys = new Subject()
-  session.run(successstory.getSuccessStory, {}).then(result => successstorys.next(result));
-  successstorys.subscribe(
-    (result) => {
-      ftpclient.ready.subscribe((ready) => {
-        if (ready) {
-          result.records.forEach((record) => {
+  ftpclient.ready.subscribe((ready) => {
+    if (ready) {
 
-            const sequence = record.get('successstory').properties.sequence 
-            const imageUrl = record.get('successstory').properties.imageUrl
-            const uid = record.get('successstory').properties.uid
-            const sub = new Subject();
-            ftpclient.request.next({ filename : imageUrl, type : "successstory", uid : uid, sequence : sequence, subject : sub});
+      const requests = [];
 
-            const up = new Subject();
-            sub.subscribe((promise) => {
-              promise.then(result => {
-                session.run(successstory.updateImage, {
-                  sequence : sequence,
-                  imageUrl : result
-                }).then(res => up.next(res));
-              });
-            });
-            backstream.register(up);
-          })
-        }
-      })
+      const clients = neo4jclient.cypher(successstory.getSuccessStory, {});
+
+      clients.subscribe(
+        
+          (record) => {
+            const client = record.get(0);
+            const sequence = client.properties.sequence;
+            const imageUrl = client.properties.imageUrl;
+    
+            const request = {
+              filename : imageUrl,
+              type : "success_story",
+              sequence : sequence,
+            };
+
+            requests.push(request);
+            const results = ftpclient.request(request);
+            results.subscribe(({ filename, result_sequence }) => {
+              
+              if (result_sequence === sequence) {
+                neo4jclient.cypher(successstory.updateImage, {
+                  sequence,
+                  imageUrl : filename
+                })
+
+
+                const index = requests.indexOf(request);
+                requests.splice(index, 1);
+                results.unsubscribe();
+                if (requests.length <= 0) {
+                  done.next("done");
+                  done.complete();
+                }
+              }
+            })
+          }
+        )
     }
-  )
+  });
+  return done;
 }
