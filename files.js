@@ -25,6 +25,7 @@ const files = module.exports = {
   subject : new Subject(),
   done : new Subject(),
   start : () => {
+      logger.log("started file migration")
     neo4jclient.setup();
     ftpclient.connect();
     files.subject.next(files.migrations.pop());

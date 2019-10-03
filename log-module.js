@@ -9,7 +9,7 @@ const logger = module.exports = {
         }
         const date = new Date();
         const formated = dateFormat(date, "dddd, mmmm dS, yyyy, h:MM:ss TT");
-        logger.logs.push(`${formated}:${log}`);
+        logger.logs.push(`${formated}: ${log}`);
     },
     clear : () => logger.logs = [],
 }

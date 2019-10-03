@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const files = require('./files');
+const logger = require('./log-module');
 
 const app = express();
 
@@ -25,5 +26,8 @@ app.get('/migrate/delete/data', (req, res) => {
 });
 
 app.get('/status', (req, res) => {
-  res.send("Current Logs: ");
+
+    const report = logger.logs.join("<br />");
+
+    res.send(report);
 });
