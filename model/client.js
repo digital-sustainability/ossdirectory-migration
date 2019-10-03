@@ -188,7 +188,7 @@ client.files = function () {
                     const client_imageUrl = client_record.properties.imageUrl;
                     const sequence = client_record.properties.sequence;
 
-                    const found_uid = list.find((file) => file.name.includes(client_uid));
+                    const found_uid = list.find((file) => file.name.includes(`client_${client_uid}`));
                     const found_imageUrl = list.find((file) => file.name.includes(client_imageUrl));
 
                     if (found_uid) {

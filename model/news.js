@@ -2,6 +2,7 @@ const mysqlclient = require('../mysql-module');
 const neo4jclient = require('../neo4j-module');
 const { Subject, combineLatest } = require('rxjs');
 const backstream = require('../backstream');
+const ftpclient = require('../ftp-module');
 
 const topnews = module.exports = {};
 
@@ -167,15 +168,7 @@ topnews.files = function () {
                     const found_uid = list.find((file) => file.name.includes(topnews_uid));
                     const found_imageUrl = list.find((file) => file.name.includes(topnews_imageUrl));
 
-                    if (found_uid) {
-
-                        backstream.filesMatched+=1;
-                        
-                        const ending = re.exec(found_uid.name)[1];
-                        const new_filename = `topnews_${sequence}.${ending}`
-                        ftpclient.requests.next({old_filename : found_uid.name, new_filename });
-
-                    } else if (found_imageUrl) {
+                    if (found_imageUrl) {
 
                         backstream.filesMatched+=1;
 

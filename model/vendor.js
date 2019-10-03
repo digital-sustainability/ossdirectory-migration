@@ -185,7 +185,7 @@ vendor.files = function () {
                     const vendor_imageUrl = vendor_record.properties.imageUrl;
                     const sequence = vendor_record.properties.sequence;
 
-                    const found_uid = list.find((file) => file.name.includes(vendor_uid));
+                    const found_uid = list.find((file) => file.name.includes(`firm_${vendor_uid}`));
                     const found_imageUrl = list.find((file) => file.name.includes(vendor_imageUrl));
 
                     if (found_uid) {

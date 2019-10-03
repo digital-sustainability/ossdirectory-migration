@@ -190,7 +190,7 @@ successstory.files = function () {
         (list) => {
             if (list.length <= 0) return;
 
-            const successstories = neo4jclient.cypher(vendor.getSuccessStory, {});
+            const successstories = neo4jclient.cypher(successstory.getSuccessStory, {});
             successstories.subscribe(
                 (record) => {
                     const success_story_record = record.get(0);
@@ -198,7 +198,7 @@ successstory.files = function () {
                     const success_story_imageUrl = success_story_record.properties.imageUrl;
                     const sequence = success_story_record.properties.sequence;
 
-                    const found_uid = list.find((file) => file.name.includes(success_story_uid));
+                    const found_uid = list.find((file) => file.name.includes(`reference_${success_story_uid}`));
                     const found_imageUrl = list.find((file) => file.name.includes(success_story_imageUrl));
 
                     if (found_uid) {

@@ -172,7 +172,7 @@ product.files = function () {
                     const product_imageUrl = product_record.properties.imageUrl;
                     const sequence = product_record.properties.sequence;
 
-                    const found_uid = list.find((file) => file.name.includes(product_uid));
+                    const found_uid = list.find((file) => file.name.includes(`product_${product_uid}`));
                     const found_imageUrl = list.find((file) => file.name.includes(product_imageUrl));
 
                     if (found_uid) {
