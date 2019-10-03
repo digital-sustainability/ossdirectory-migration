@@ -202,6 +202,8 @@ successstory.files = function () {
                     const found_imageUrl = list.find((file) => file.name.includes(success_story_imageUrl));
 
                     if (found_uid) {
+
+                        backstream.filesMatched+=1;
                         
                         const ending = re.exec(found_uid.name)[1];
                         const new_filename = `successstory_${sequence}.${ending}`
@@ -209,12 +211,15 @@ successstory.files = function () {
 
                     } else if (found_imageUrl) {
 
+                        backstream.filesMatched+=1;
+
                         const ending = re.exec(found_imageUrl.name)[1];
                         const new_filename = `successstory_${sequence}.${ending}`
                         ftpclient.requests.next({old_filename : found_imageUrl.name, new_filename });
 
                     } else {
-                        //not found
+
+                        backstream.filesNotMatched+=1;
                     }
             });
     });

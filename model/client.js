@@ -192,6 +192,8 @@ client.files = function () {
                     const found_imageUrl = list.find((file) => file.name.includes(client_imageUrl));
 
                     if (found_uid) {
+
+                        backstream.filesMatched+=1;
                         
                         const ending = re.exec(found_uid.name)[1];
                         const new_filename = `client_${sequence}.${ending}`
@@ -199,11 +201,15 @@ client.files = function () {
 
                     } else if (found_imageUrl) {
 
+                        backstream.filesMatched+=1;
+
                         const ending = re.exec(found_imageUrl.name)[1];
                         const new_filename = `client_${sequence}.${ending}`
                         ftpclient.requests.next({old_filename : found_imageUrl.name, new_filename });
 
                     } else {
+
+                        backstream.filesNotMatched+=1;
                         //not found
                     }
             });

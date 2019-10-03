@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const files = require('./files');
 const logger = require('./log-module');
+const backstream = require('./backstream');
 
 const app = express();
 
@@ -26,8 +27,11 @@ app.get('/migrate/delete/data', (req, res) => {
 });
 
 app.get('/status', (req, res) => {
-
+    const stats = `Files Uploaded: ${backstream.filesUploaded}
+    Files Matched: ${backstream.filesMatched}
+    Files Not Matched: ${backstream.filesNotMatched}
+    `;
     const report = logger.logs.join("<br />");
 
-    res.send(report);
+    res.send(stats + report);
 });

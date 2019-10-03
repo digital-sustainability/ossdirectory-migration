@@ -1,4 +1,6 @@
 const minio = require('minio');
+const backstream = require('./backstream');
+const logger = require('./log-module');
 
 require('dotenv').config();
 
@@ -15,8 +17,12 @@ const minioclient = module.exports = {
     upload : async (filename, stream) => {
         minioclient.client.putObject(process.env.MINIO_BUCKET, filename, stream, function(error, key) {
             if (error) {
+                console.log(error);
+                logger.log(error);
             } else {
+                backstream.filesUploaded+=1;
                 console.log(`uploaded ${filename}`);
+                logger.log(`uploaded ${filename}`);
             }
         });
     }

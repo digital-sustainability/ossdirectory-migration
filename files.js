@@ -14,34 +14,28 @@ const product_category = require('./model/product_category');
 
 const files = module.exports = {
   migrations : [
-    //  product,
+    product,
     vendor,
-    //  client,
+    client,
     // job,
-    // news,
-    //  success_story,
+    news,
+    success_story,
     // product_category,
   ],
   subject : new Subject(),
   done : new Subject(),
   start : () => {
-      logger.log("started file migration")
+    logger.log("started file migration")
     neo4jclient.setup();
     ftpclient.connect();
-    files.subject.next(files.migrations.pop());
     
-    files.done.subscribe(() => console.log("done"));
+    files.migrations.forEach((migration) => {
+        migration.files();
+    })
   }
 }
 
-files.done.subscribe(() => {
+neo4jclient.closed.subscribe(() => {
   neo4jclient.end();
   ftpclient.end();
-})
-
-files.subject.subscribe(
-  (migration) => 
-  {
-    const done = migration.files();
-  }
-);
+});

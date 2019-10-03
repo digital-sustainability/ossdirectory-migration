@@ -9,6 +9,7 @@ const neo4jclient = module.exports = {
   close : () => neo4jclient.session.close(),
   end : () => neo4jclient.driver.close(),
   requests : [],
+  closed : new Subject(),
   cypher : (query, attributes) => {
   //TODO: check if driver is active
 
@@ -29,6 +30,8 @@ const neo4jclient = module.exports = {
       }
       if (neo4jclient.requests.length <= 0){
         neo4jclient.close();
+        neo4jclient.closed.next("closed");
+        neo4jclient.closed.complete();
       }
       const index = neo4jclient.requests.indexOf(observable);
       neo4jclient.requests.splice(index, 1);
@@ -36,29 +39,6 @@ const neo4jclient = module.exports = {
     }).catch( (reason) => {
         logger.log(reason);
     });
-
-    // observable.subscribe({
-    //   next: function(record) {
-    //     subject.next(record)
-    //   },
-      
-    //   completed: function(result) {
-    //     //TODO: Track results
-
-    //     //remove request
-    //     const index = neo4jclient.requests.indexOf(observable);
-    //     neo4jclient.requests.splice(index, 1);
-
-    //     //if all requests completed close session
-    //     if (neo4jclient.requests.length <= 0) {
-    //       neo4jclient.close();
-    //     }
-    //     subject.complete();
-    //   },
-    //   error: function(error) {
-    //     //TODO: Do something on error
-    //   }
-    // });
     
     return subject;
   }
