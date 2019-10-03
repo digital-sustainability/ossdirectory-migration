@@ -5,7 +5,7 @@ const logger = require('./log-module');
 
 const app = express();
 
-app.listen(4200, () => {});
+app.listen(80, () => {});
 app.get('/', (req, res) => { res.send("Migration Server OSS Directory")});
 app.get('/migrate/data', (req, res) => {
   
