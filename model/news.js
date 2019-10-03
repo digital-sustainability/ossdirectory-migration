@@ -149,37 +149,39 @@ MATCH (topnews:TopNews) WHERE topnews.sequence = $sequence
 SET topnews.imageUrl = $imageUrl
 `
 
+const re = /(?:\.([^.]+))?$/;
 topnews.files = function () {
 
-  const session = neo4jtopnews.session;
+    ftpclient.list.subscribe(
+        (list) => {
+            if (list.length <= 0) return;
 
-  const topnewss = new Subject()
-  session.run(topnews.getTopNews, {}).then(result => topnewss.next(result));
-  topnewss.subscribe(
-    (result) => {
-      ftptopnews.ready.subscribe((ready) => {
-        if (ready) {
-          result.records.forEach((record) => {
+            const topnewss = neo4jclient.cypher(topnews.getTopNews, {});
+            topnewss.subscribe(
+                (record) => {
+                    const topnews_record = record.get(0);
+                    const topnews_uid = topnews_record.properties.uid;
+                    const topnews_imageUrl = topnews_record.properties.imageUrl;
+                    const sequence = topnews_record.properties.sequence;
 
-            const sequence = record.get('topnews').properties.sequence 
-            const imageUrl = record.get('topnews').properties.imageUrl
-            const uid = record.get('topnews').properties.uid
-            const sub = new Subject();
-            ftptopnews.request.next({ filename : imageUrl, type : "topnews", uid : uid, sequence : sequence, subject : sub});
+                    const found_uid = list.find((file) => file.name.includes(topnews_uid));
+                    const found_imageUrl = list.find((file) => file.name.includes(topnews_imageUrl));
 
-            const up = new Subject();
-            sub.subscribe((promise) => {
-              promise.then(result => {
-                session.run(topnews.updateImage, {
-                  sequence : sequence,
-                  imageUrl : result
-                }).then(res => up.next(res));
-              });
+                    if (found_uid) {
+                        
+                        const ending = re.exec(found_uid.name)[1];
+                        const new_filename = `topnews_${sequence}.${ending}`
+                        ftpclient.requests.next({old_filename : found_uid.name, new_filename });
+
+                    } else if (found_imageUrl) {
+
+                        const ending = re.exec(found_imageUrl.name)[1];
+                        const new_filename = `topnews_${sequence}.${ending}`
+                        ftpclient.requests.next({old_filename : found_imageUrl.name, new_filename });
+
+                    } else {
+                        //not found
+                    }
             });
-            backstream.register(up);
-          })
-        }
-      })
-    }
-  )
+    });
 }

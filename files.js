@@ -14,12 +14,12 @@ const product_category = require('./model/product_category');
 
 const files = module.exports = {
   migrations : [
-    product,
+    //  product,
     vendor,
-    client,
+    //  client,
     // job,
     // news,
-    success_story,
+    //  success_story,
     // product_category,
   ],
   subject : new Subject(),
@@ -43,16 +43,5 @@ files.subject.subscribe(
   (migration) => 
   {
     const done = migration.files();
-    done.subscribe(
-      () => {
-        if (files.migrations.length > 0) {
-          files.subject.next(files.migrations.pop());
-        }
-        else {
-          files.done.next("done");
-          logger.log("file migration completed");
-        }
-      }
-    )
   }
 );

@@ -170,55 +170,40 @@ vendor.updateImage = `
 MATCH (vendor:Vendor) WHERE vendor.sequence = $sequence
 SET vendor.imageUrl = $imageUrl
 `
-
+const re = /(?:\.([^.]+))?$/;
 vendor.files = function () {
 
-  const done = new Subject();
+    ftpclient.list.subscribe(
+        (list) => {
+            if (list.length <= 0) return;
 
-  ftpclient.ready.subscribe((ready) => {
-    if (ready) {
+            const vendors = neo4jclient.cypher(vendor.getVendor, {});
+            vendors.subscribe(
+                (record) => {
+                    const vendor_record = record.get(0);
+                    const vendor_uid = vendor_record.properties.uid;
+                    const vendor_imageUrl = vendor_record.properties.imageUrl;
+                    const sequence = vendor_record.properties.sequence;
 
-      const requests = [];
+                    const found_uid = list.find((file) => file.name.includes(vendor_uid));
+                    const found_imageUrl = list.find((file) => file.name.includes(vendor_imageUrl));
 
-      const clients = neo4jclient.cypher(vendor.getVendor.getClient, {});
+                    if (found_uid) {
+                        
+                        const ending = re.exec(found_uid.name)[1];
+                        const new_filename = `vendor_${sequence}.${ending}`
+                        ftpclient.requests.next({old_filename : found_uid.name, new_filename });
 
-      clients.subscribe(
-        
-          (record) => {
-            const client = record.get(0);
-            const sequence = client.properties.sequence;
-            const imageUrl = client.properties.imageUrl;
-    
-            const request = {
-              filename : imageUrl,
-              type : "vendor",
-              sequence : sequence,
-            };
+                    } else if (found_imageUrl) {
 
-            requests.push(request);
-            const results = ftpclient.request(request);
-            results.subscribe(({ filename, result_sequence }) => {
-              
-              if (result_sequence === sequence) {
-                neo4jclient.cypher(vendor.updateImage, {
-                  sequence,
-                  imageUrl : filename
-                })
+                        const ending = re.exec(found_imageUrl.name)[1];
+                        const new_filename = `vendor_${sequence}.${ending}`
+                        ftpclient.requests.next({old_filename : found_imageUrl.name, new_filename });
 
-
-                const index = requests.indexOf(request);
-                requests.splice(index, 1);
-                results.unsubscribe();
-                if (requests.length <= 0) {
-                  done.next("done");
-                  done.complete();
-                }
-              }
-            })
-          }
-        )
-    }
-  });
-
-  return done;
+                    } else {
+                        //not found
+                    }
+            });
+    });
 }
+
