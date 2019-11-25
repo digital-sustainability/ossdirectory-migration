@@ -1,12 +1,13 @@
-const mysqlclient = require('./mysql-module');
-mysqlclient.connect();
+const mysqlClient = require('./query');
 
 const overview = module.exports = {}
 
+mysqlClient.connect();
+
 overview.table = (table_name) => {
-  mysqlclient.query(`SELECT * FROM ${table_name} LIMIT 10`, (err, rows) => {
+  mysqlClient.connection.query(`SELECT * FROM ${table_name} LIMIT 10`, (err, rows) => {
     console.log(err, rows);
-    mysqlclient.end();
+    mysqlClient.connection.end();
   });
 }
 
